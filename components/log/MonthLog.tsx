@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, Copy, Plus, X, Sparkles, ArrowRightLeft } fr
 import type { MonthData, EntryView } from "@/lib/queries";
 import { parseTimeOfDay, durationMinutes, formatDuration, formatTimeOfDay } from "@/lib/parse/time";
 import { formatMoney } from "@/lib/format";
-import { saveEntry, deleteEntry, cloneEntry, cloneLastDay } from "@/app/actions";
+import { saveEntry, deleteEntry, cloneLastDay } from "@/app/actions";
 import { getCcHint, summarizeCcSession, type CcHint } from "@/app/cc-actions";
 import { sfx } from "@/lib/sfx";
 import { cn } from "@/lib/utils";
@@ -180,7 +180,14 @@ export function MonthLog({
   };
 
   const remove = (id: string) => runAction(() => deleteEntry(id), () => sfx.click());
-  const duplicate = (id: string) => runAction(() => cloneEntry(id));
+  // Duplicate -> open the composer as a NEW entry, prefilled from this row but
+  // dated to the next day. The user reviews/edits, then saves (no silent clone).
+  const duplicateToNextDay = (e: EntryView) => {
+    setError(null);
+    const date = addDays(e.date, 1);
+    setDraft({ editId: null, date, projectId: e.projectId, description: e.description, from: formatTimeOfDay(e.startMin), to: formatTimeOfDay(e.endMin) });
+    loadCc(date, e.projectId);
+  };
   const cloneYesterday = () => runAction(() => cloneLastDay(today), () => sfx.confirm());
 
   const goMonth = (delta: number) => {
@@ -388,7 +395,7 @@ export function MonthLog({
                 <td className="px-3 text-ink-dim">{formatTimeOfDay(e.endMin)}</td>
                 <td className="px-3 text-right text-ink">{formatDuration(e.durationMin)}</td>
                 <td className="px-2">
-                  <RowMenu onEdit={() => openEdit(e)} onDuplicate={() => duplicate(e.id)} onDelete={() => remove(e.id)} />
+                  <RowMenu onEdit={() => openEdit(e)} onDuplicate={() => duplicateToNextDay(e)} onDelete={() => remove(e.id)} />
                 </td>
               </tr>
             ));
