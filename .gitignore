@@ -52,18 +52,20 @@ WORK_LOG.md
 WORK_LOG_archive/
 SESSION_HANDOFF.md
 
-# Claude Code + Codex CLI artifacts. SHARE skills/rules/agents/settings.json so
-# the agent config is versioned; keep personal/local + owner marker OUT.
-.claude/*
-!.claude/skills/
-!.claude/rules/
-!.claude/agents/
-!.claude/settings.json
+# Agent config + internal docs — NEVER in the public repo (kept local only).
+.claude/
 .agents/
 .codex/
 .mcp.json
+AGENTS.md
+CLAUDE.md
+PROPOSAL.md
+/design/
 
 # Local certs / keys
 *.pem
 *.key
 *.p12
+
+# Local Docker customization (e.g. CC transcript mount)
+docker-compose.override.yml
