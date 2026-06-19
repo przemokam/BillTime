@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <title>BillTime</title>
+  <!-- brand yellow slab with clip-tl notches (top-right + bottom-left) -->
+  <path d="M0 0 H25 L32 7 V32 H7 L0 25 Z" fill="#d4ff2e"/>
+  <text x="16" y="16.5" text-anchor="middle" dominant-baseline="central"
+        font-family="ui-sans-serif, system-ui, 'Arial Black', Arial, sans-serif"
+        font-weight="900" font-size="16" letter-spacing="-0.5" fill="#0a0b07">BT</text>
+</svg>
