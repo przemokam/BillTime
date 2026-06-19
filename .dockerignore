@@ -1,0 +1,32 @@
+# Build context hygiene: ship source + prisma only; everything below is rebuilt
+# in the image or must never leave the host.
+node_modules
+.next
+out
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+prisma/*.db*
+.claude
+.agents
+.codex
+design
+WORK_LOG.md
+WORK_LOG_archive
+SESSION_HANDOFF.md
+*.log
+npm-debug.log*
+.DS_Store
+Dockerfile
+docker-compose.yml
+.dockerignore
+README.md
+AGENTS.md
+CLAUDE.md
+PROPOSAL.md

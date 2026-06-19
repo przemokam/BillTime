@@ -131,13 +131,55 @@ export async function setWeekdayDefault(weekday: number, description: string, en
   }
 }
 
+// Only these key/value settings may be written through the generic action.
+// The issuer profile has its own validated action below.
+const ALLOWED_SETTING_KEYS = new Set(["defaultCurrency", "ccIdleGapMin", "skin"]);
+
 export async function setSetting(key: string, value: string): Promise<ActionResult> {
+  if (!ALLOWED_SETTING_KEYS.has(key)) return { ok: false, error: "Unknown setting" };
+  if (typeof value !== "string" || value.length > 1000) return { ok: false, error: "Invalid value" };
   try {
     await db.setting.upsert({ where: { key }, update: { value }, create: { key, value } });
     revalidatePath("/settings");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Failed to save setting" };
+  }
+}
+
+const IssuerInput = z.object({
+  firstName: z.string().trim().max(100).default(""),
+  lastName: z.string().trim().max(100).default(""),
+  email: z.string().trim().max(200).default(""),
+  company: z.string().trim().max(200).default(""),
+  vat: z.string().trim().max(60).default(""),
+  address: z.string().trim().max(500).default(""),
+  iban: z.string().trim().max(60).default(""),
+});
+
+/** Save the whole issuer profile atomically (all keys in one transaction). */
+export async function setIssuerProfile(input: z.input<typeof IssuerInput>): Promise<ActionResult> {
+  const parsed = IssuerInput.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid issuer data" };
+  const v = parsed.data;
+  const map: Record<string, string> = {
+    issuerFirstName: v.firstName,
+    issuerLastName: v.lastName,
+    issuerEmail: v.email,
+    issuerCompany: v.company,
+    issuerVat: v.vat,
+    issuerAddress: v.address,
+    issuerIban: v.iban,
+  };
+  try {
+    await db.$transaction(
+      Object.entries(map).map(([key, value]) => db.setting.upsert({ where: { key }, update: { value }, create: { key, value } })),
+    );
+    revalidatePath("/settings");
+    revalidatePath("/reports");
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Failed to save issuer" };
   }
 }
 

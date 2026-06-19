@@ -8,10 +8,10 @@ const SKINS = [
   { id: "terminal", label: "Terminal" },
 ] as const;
 
-export function SkinSwitcher({ skin, onChange, onYellow }: { skin: string; onChange: (s: string) => void; onYellow?: boolean }) {
+export function SkinSwitcher({ skin, onChange, onYellow, showLabel = true }: { skin: string; onChange: (s: string) => void; onYellow?: boolean; showLabel?: boolean }) {
   return (
     <div className="flex items-center gap-1">
-      <span className={cn("mr-1 text-[9px] uppercase tracking-[2px]", onYellow ? "text-black/50" : "text-ink-faint")}>skin</span>
+      {showLabel && <span className={cn("mr-1 text-[9px] uppercase tracking-[2px]", onYellow ? "text-black/50" : "text-ink-faint")}>skin</span>}
       {SKINS.map((s) => {
         const active = skin === s.id;
         return (

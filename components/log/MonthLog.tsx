@@ -204,6 +204,18 @@ export function MonthLog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openNew]);
 
+  // Open the composer when arriving with timer-stop / add params. Reacts to the
+  // params changing (not just mount), because clicking Stop while already on /log
+  // re-navigates here without remounting MonthLog. After consuming, strip the
+  // one-shot params (keeping month/project) so a refresh/remount won't re-open it.
+  const consumeNavParams = useCallback(() => {
+    const q = new URLSearchParams();
+    q.set("y", String(data.year));
+    q.set("m", String(data.month));
+    if (selectedProjectId) q.set("p", selectedProjectId);
+    router.replace(`/log?${q.toString()}`, { scroll: false });
+  }, [router, data.year, data.month, selectedProjectId]);
+
   useEffect(() => {
     if (timerDraft && timerDraft.projectId) {
       const date = today;
@@ -211,11 +223,13 @@ export function MonthLog({
       setError(null);
       setDraft({ editId: null, date, projectId, description: defaultDescFor(date, projectId), from: timerDraft.from, to: timerDraft.to });
       loadCc(date, projectId);
+      consumeNavParams();
     } else if (autoAdd) {
       openNew(autoAdd === "1" || autoAdd === "today" ? undefined : autoAdd);
+      consumeNavParams();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [timerDraft?.projectId, timerDraft?.from, timerDraft?.to, autoAdd]);
 
   const calc = useMemo(() => {
     if (!draft) return null;

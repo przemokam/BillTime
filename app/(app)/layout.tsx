@@ -1,5 +1,12 @@
 import { getProjects, getActiveTimer, getSetting } from "@/lib/queries";
+import { ccAvailable } from "@/lib/claude-sessions";
 import { SkinShell } from "@/components/shell/SkinShell";
+
+// The shell shows live DB state (timer dropdown projects, active timer, skin).
+// Without this, the layout is statically cached at build time, so on statically
+// rendered pages (/projects, /settings) the timer's project list would freeze to
+// whatever the DB held at build (empty in a fresh Docker image) -> "no project".
+export const dynamic = "force-dynamic";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const [projects, timerRow, skinSetting] = await Promise.all([getProjects(), getActiveTimer(), getSetting("skin")]);
@@ -21,7 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <SkinShell initialSkin={initialSkin} projects={projectOpts} timer={timer}>
+    <SkinShell initialSkin={initialSkin} projects={projectOpts} timer={timer} ccAvailable={ccAvailable()}>
       {children}
     </SkinShell>
   );

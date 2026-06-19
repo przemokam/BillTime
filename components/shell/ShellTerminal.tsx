@@ -3,21 +3,18 @@ import { Nav } from "./Nav";
 import { SoundToggle } from "./SoundToggle";
 import { TimerHud, type TimerProps } from "./TimerHud";
 import { MiniTimer } from "./MiniTimer";
-import { SkinSwitcher } from "./SkinSwitcher";
 
 type ProjectOpt = { id: string; name: string };
 
 export function ShellTerminal({
   projects,
   timer,
-  skin,
-  onSkin,
+  ccAvailable,
   children,
 }: {
   projects: ProjectOpt[];
   timer: TimerProps;
-  skin: string;
-  onSkin: (s: string) => void;
+  ccAvailable: boolean;
   children: React.ReactNode;
 }) {
   const mini = timer
@@ -48,8 +45,8 @@ export function ShellTerminal({
             <MiniTimer timer={mini} place="sidebar" />
           </div>
           <div className="text-[12px] leading-relaxed">
-            <div className="text-neon-green">◉ CC Assistant active</div>
-            <div className="text-ink-faint">reads local sessions to suggest entries</div>
+            <div className={ccAvailable ? "text-neon-green" : "text-ink-dim"}>◉ {ccAvailable ? "CC Assistant active" : "CC offline"}</div>
+            <div className="text-ink-faint">{ccAvailable ? "reads local sessions to suggest entries" : "no Claude Code transcripts mounted"}</div>
           </div>
         </div>
       </aside>
@@ -63,7 +60,6 @@ export function ShellTerminal({
         {timer && <span className="text-ink-faint">{timer.projectName}</span>}
         <span className="flex-1" />
         <span className="text-ink-faint">db <b className="font-normal text-neon-cyan">sqlite</b></span>
-        <SkinSwitcher skin={skin} onChange={onSkin} />
         <SoundToggle />
       </footer>
     </div>

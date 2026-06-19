@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { durationMinutes } from "@/lib/parse/time";
+import { ISSUER_KEYS, type IssuerProfile } from "@/lib/types";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -158,4 +159,23 @@ export async function getActiveTimer() {
 export async function getSetting(key: string): Promise<string | null> {
   const s = await db.setting.findUnique({ where: { key } });
   return s?.value ?? null;
+}
+
+/**
+ * The single report issuer (who is billing) shown on reports + PDF. Stored as
+ * Setting key/value rows (no schema change). Wrapped in one helper so a future
+ * multi-user move only swaps this query, not every caller.
+ */
+export async function getIssuerProfile(): Promise<IssuerProfile> {
+  const rows = await db.setting.findMany({ where: { key: { in: [...ISSUER_KEYS] } } });
+  const m = new Map(rows.map((r) => [r.key, r.value]));
+  return {
+    firstName: m.get("issuerFirstName") ?? "",
+    lastName: m.get("issuerLastName") ?? "",
+    email: m.get("issuerEmail") ?? "",
+    company: m.get("issuerCompany") ?? "",
+    vat: m.get("issuerVat") ?? "",
+    address: m.get("issuerAddress") ?? "",
+    iban: m.get("issuerIban") ?? "",
+  };
 }

@@ -3,7 +3,6 @@ import { Nav } from "./Nav";
 import { SoundToggle } from "./SoundToggle";
 import { TimerHud, type TimerProps } from "./TimerHud";
 import { MiniTimer } from "./MiniTimer";
-import { SkinSwitcher } from "./SkinSwitcher";
 
 type ProjectOpt = { id: string; name: string };
 
@@ -12,14 +11,12 @@ const TICKS = { backgroundImage: "repeating-linear-gradient(90deg, var(--yellow)
 export function ShellSlab({
   projects,
   timer,
-  skin,
-  onSkin,
+  ccAvailable,
   children,
 }: {
   projects: ProjectOpt[];
   timer: TimerProps;
-  skin: string;
-  onSkin: (s: string) => void;
+  ccAvailable: boolean;
   children: React.ReactNode;
 }) {
   const mini = timer
@@ -41,7 +38,7 @@ export function ShellSlab({
                 TIME
               </span>
             </Link>
-            <div className="mt-1 text-[10px] font-semibold tracking-[2px] opacity-75">HOURLY BILLING SYSTEM · © 2026 · V0.1</div>
+            <div className="mt-1 text-[10px] font-semibold tracking-[2px] opacity-75">HOURLY BILLING SYSTEM</div>
           </div>
           <TimerHud timer={timer} projects={projects} variant="slab" />
         </div>
@@ -50,9 +47,8 @@ export function ShellSlab({
 
       {/* NAV ROW */}
       <div className="border-b border-hair bg-panel">
-        <div className="mx-auto flex max-w-[1340px] items-center justify-between gap-4 px-7 py-3">
+        <div className="mx-auto flex max-w-[1340px] items-center gap-4 px-7 py-3">
           <Nav variant="horizontal" />
-          <SkinSwitcher skin={skin} onChange={onSkin} />
         </div>
       </div>
 
@@ -79,8 +75,8 @@ export function ShellSlab({
           <MiniTimer timer={mini} place="status" />
           {timer && <span className="text-ink-faint">{timer.projectName}</span>}
           <span className="flex items-center gap-2">
-            <span className="text-neon-green">◉</span>
-            <span className="text-ink-faint">CC Assistant active</span>
+            <span className={ccAvailable ? "text-neon-green" : "text-ink-faint"}>◉</span>
+            <span className="text-ink-faint">{ccAvailable ? "CC Assistant active" : "CC offline"}</span>
           </span>
           <span className="flex-1" />
           <span className="text-ink-faint">db <b className="font-normal text-neon-yellow">sqlite</b></span>
@@ -93,7 +89,7 @@ export function ShellSlab({
         <div className="hazard h-2.5" />
         <div className="flex items-center justify-between px-7 py-1 text-[9px] font-semibold tracking-[2px] text-black">
           <span>BILLTIME // HOURLY BILLING SYSTEM</span>
-          <span>© 2026 · ALL RIGHTS RESERVED</span>
+          <span>© 2026 · by TryHard3r · V0.1</span>
         </div>
       </div>
     </div>

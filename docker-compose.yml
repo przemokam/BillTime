@@ -1,0 +1,25 @@
+# BillTime self-host. `docker compose up -d` then open http://localhost:3939
+# Host port is 3939 (not 3000) to avoid clashing with other local containers.
+# Change the left side of the mapping below if 3939 is taken too.
+# Your data lives in the named volume `billtime-data` (the SQLite file), so it
+# survives container rebuilds. Back it up by copying /data/billtime.db out.
+services:
+  billtime:
+    build: .
+    image: billtime:latest
+    container_name: billtime
+    ports:
+      - "3939:3000"
+    environment:
+      - DATABASE_URL=file:/data/billtime.db
+      # Optional: enable the Claude Code suggestion chip (hours + session topics)
+      # inside the container by also uncommenting the read-only mount below.
+      # The on-demand AI "sum" still needs the local `claude` CLI (not in the image).
+      # - BILLTIME_CC_DIR=/cc
+    volumes:
+      - billtime-data:/data
+      # - ${HOME}/.claude/projects:/cc:ro
+    restart: unless-stopped
+
+volumes:
+  billtime-data:
