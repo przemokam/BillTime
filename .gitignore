@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Production build
+/build
+/dist
+
+# Env files - secrets NEVER in git
+.env
+.env.*
+!.env.example
+
+# Local database (SQLite)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+/prisma/*.db*
+/prisma/dev.db*
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Testing artifacts
+/coverage
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Personal session state (per-developer, never committed)
+WORK_LOG.md
+WORK_LOG_archive/
+SESSION_HANDOFF.md
+
+# Claude Code + Codex CLI artifacts. SHARE skills/rules/agents/settings.json so
+# the agent config is versioned; keep personal/local + owner marker OUT.
+.claude/*
+!.claude/skills/
+!.claude/rules/
+!.claude/agents/
+!.claude/settings.json
+.agents/
+.codex/
+.mcp.json
+
+# Local certs / keys
+*.pem
+*.key
+*.p12

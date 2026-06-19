@@ -1,0 +1,82 @@
+// BillTime data model.
+// SQLite locally (file-based, zero setup). Schema written so a later swap to
+// PostgreSQL is a datasource change, not a rewrite.
+//
+// SQLite + Prisma constraints (verified): no native enums, no scalar lists.
+// -> "enum" fields are String validated by Zod; lists are JSON strings.
+// Money is stored as integer cents. Times are minutes-from-midnight (Int).
+// A work day's calendar date is a String "YYYY-MM-DD" (timezone-safe).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id        String    @id @default(cuid())
+  name      String
+  note      String?
+  projects  Project[]
+  createdAt DateTime  @default(now())
+}
+
+model Project {
+  id            String          @id @default(cuid())
+  name          String
+  company       Company?        @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  companyId     String?
+  rateCents     Int             @default(0) // hourly rate in cents
+  currency      String          @default("EUR") // EUR | PLN | USD | ... (validated by Zod)
+  color         String?         // neon accent token (yellow|cyan|magenta|green) or hex
+  repoPathsJson String? // JSON array of git repo dirs (cwd) for Claude Code suggestions
+  isArchived    Boolean         @default(false)
+  entries       TimeEntry[]
+  weekdayRules  WeekdayDefault[]
+  createdAt     DateTime        @default(now())
+}
+
+model TimeEntry {
+  id          String   @id @default(cuid())
+  date        String   // "YYYY-MM-DD"
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String
+  description String
+  startMin    Int      // minutes from midnight (0-1439)
+  endMin      Int      // may exceed 1440 when crossing midnight
+  source      String   @default("manual") // manual | cloned | timer | cc-suggested
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([date])
+  @@index([projectId])
+}
+
+model WeekdayDefault {
+  id          String   @id @default(cuid())
+  weekday     Int      // 0=Sunday ... 6=Saturday
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectId   String?
+  description String   // prefilled into the description field
+  enabled     Boolean  @default(true)
+}
+
+// Singleton key/value settings (defaultCurrency, ccIdleGapMin, reportAuthorName, ...)
+model Setting {
+  key   String @id
+  value String
+}
+
+// A running timer that survives restarts (at most one active at a time).
+model ActiveTimer {
+  id          String   @id @default("singleton")
+  projectId   String?
+  description String   @default("")
+  startedAt   DateTime @default(now())
+  pausedMs    Int      @default(0) // accumulated paused milliseconds
+  isPaused    Boolean  @default(false)
+  pausedAt    DateTime?
+}

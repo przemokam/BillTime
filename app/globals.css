@@ -1,0 +1,185 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   SKINS - palette/font/notch switch via [data-skin] on <html>.
+   Tailwind colors read rgb(var(--c-*)/<alpha>); inline styles read
+   the hex --yellow/--cyan/... ; both are defined per skin below.
+   ============================================================ */
+
+/* default = slab */
+:root,
+[data-skin="slab"] {
+  --bg: #0c0d0a;
+  --panel: #141611;
+  --elev: #181a13;
+  --elev-hi: #21241a;
+  --black: #0a0b07;
+  --hair: rgba(212, 255, 46, 0.1);
+  --hair-hot: rgba(212, 255, 46, 0.2);
+  --hair-neon: rgba(212, 255, 46, 0.34);
+  --ink: #eef0e6;
+  --ink-dim: #9aa088;
+  --ink-faint: #5e6450;
+  --yellow: #d4ff2e;
+  --cyan: #2fe6ff;
+  --magenta: #ff3d7f;
+  --red: #ff2d55;
+  --green: #34ffae;
+
+  --c-bg: 12 13 10;
+  --c-panel: 20 22 17;
+  --c-elev: 24 26 19;
+  --c-elev-hi: 33 36 26;
+  --c-ink: 238 240 230;
+  --c-ink-dim: 154 160 136;
+  --c-ink-faint: 94 100 80;
+  --c-yellow: 212 255 46;
+  --c-cyan: 47 230 255;
+  --c-magenta: 255 61 127;
+  --c-red: 255 45 85;
+  --c-green: 52 255 174;
+
+  --font-disp: var(--font-tektur);
+}
+
+[data-skin="terminal"] {
+  --bg: #0d1117;
+  --panel: #131821;
+  --elev: #1a2233;
+  --elev-hi: #1f2940;
+  --black: #060810;
+  --hair: rgba(148, 175, 220, 0.1);
+  --hair-hot: rgba(148, 175, 220, 0.22);
+  --hair-neon: rgba(47, 230, 255, 0.28);
+  --ink: #e8edf5;
+  --ink-dim: #b0bccd;
+  --ink-faint: #7a8799;
+  --yellow: #fcee0a;
+  --cyan: #2fe6ff;
+  --magenta: #ff3d7f;
+  --red: #ff2d55;
+  --green: #34ffae;
+
+  --c-bg: 13 17 23;
+  --c-panel: 19 24 33;
+  --c-elev: 26 34 51;
+  --c-elev-hi: 31 41 64;
+  --c-ink: 232 237 245;
+  --c-ink-dim: 176 188 205;
+  --c-ink-faint: 122 135 153;
+  --c-yellow: 252 238 10;
+  --c-cyan: 47 230 255;
+  --c-magenta: 255 61 127;
+  --c-red: 255 45 85;
+  --c-green: 52 255 174;
+
+  --font-disp: var(--font-chakra);
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 15px;
+    line-height: 1.65;
+    letter-spacing: 0.2px;
+    font-variant-numeric: tabular-nums;
+    background-attachment: fixed;
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 900;
+    background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.1) 0 1px, transparent 1px 3px);
+    opacity: 0.18;
+  }
+  /* per-skin atmosphere */
+  [data-skin="slab"] body {
+    background-image: radial-gradient(90% 60% at 82% 118%, rgba(212, 255, 46, 0.05), transparent 55%);
+  }
+  [data-skin="terminal"] body {
+    background-image:
+      linear-gradient(rgba(80, 160, 200, 0.014) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(80, 160, 200, 0.014) 1px, transparent 1px),
+      radial-gradient(130% 90% at 85% -15%, rgba(255, 61, 127, 0.06), transparent 55%),
+      radial-gradient(130% 90% at -10% 115%, rgba(47, 230, 255, 0.05), transparent 55%);
+    background-size: 48px 48px, 48px 48px, 100% 100%, 100% 100%;
+  }
+  [data-skin="terminal"] body::after {
+    opacity: 0.2;
+  }
+}
+
+@layer components {
+  /* notched corners differ per skin: slab = top-right/bottom-left, terminal = top-left/bottom-right */
+  [data-skin="slab"] .clip-tl {
+    clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+  }
+  [data-skin="terminal"] .clip-tl {
+    clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  }
+  .clip-sm {
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
+  .clip-hud {
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  }
+  .clip-tab {
+    clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
+  }
+  .hazard {
+    background: repeating-linear-gradient(-45deg, var(--black) 0 12px, transparent 12px 24px);
+  }
+  .hazard-y {
+    background: repeating-linear-gradient(-45deg, var(--yellow) 0 12px, transparent 12px 24px);
+  }
+  .bracket-mag::before,
+  .bracket-mag::after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+  }
+  .bracket-mag::before {
+    left: -1px;
+    bottom: -1px;
+    border-left: 1px solid var(--magenta);
+    border-bottom: 1px solid var(--magenta);
+  }
+  .bracket-mag::after {
+    right: -1px;
+    top: -1px;
+    border-right: 1px solid var(--magenta);
+    border-top: 1px solid var(--magenta);
+  }
+}
+
+.dotmatrix {
+  background-image: radial-gradient(var(--yellow) 1px, transparent 1px);
+  background-size: 9px 9px;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes swipe { 0% { transform: translateX(-100%); } 60%, 100% { transform: translateX(220%); } }
+@keyframes glitch {
+  0%, 100% { text-shadow: none; transform: none; }
+  25% { text-shadow: -2px 0 var(--magenta), 2px 0 var(--cyan); }
+  50% { text-shadow: 2px 0 var(--magenta), -2px 0 var(--cyan); transform: translateX(1px); }
+  75% { text-shadow: -1px 0 var(--cyan), 1px 0 var(--magenta); }
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--hair-hot); }
+::-webkit-scrollbar-thumb:hover { background: var(--hair-neon); }
