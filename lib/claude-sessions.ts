@@ -14,11 +14,9 @@ import os from "node:os";
  * type:"ai-title" lines carrying aiTitle (Claude's own session summary).
  */
 
-// Defaults to the host's transcripts. In a container, mount them and point here
-// via BILLTIME_CC_DIR (read-only) to enable the offline suggestion chip.
-const ROOT = process.env.BILLTIME_CC_DIR || path.join(os.homedir(), ".claude", "projects");
+const ROOT = path.join(os.homedir(), ".claude", "projects");
 
-/** Whether Claude Code transcripts are reachable (false e.g. in a container with no mount). */
+/** Whether Claude Code transcripts are reachable (false e.g. inside a container). */
 export function ccAvailable(): boolean {
   try {
     return fs.existsSync(ROOT);

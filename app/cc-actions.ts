@@ -1,7 +1,6 @@
 "use server";
 
 import { spawn } from "node:child_process";
-import Anthropic from "@anthropic-ai/sdk";
 import { db } from "@/lib/db";
 import { getCcSuggestion, buildSessionDigest, claudeBinary } from "@/lib/claude-sessions";
 import { formatTimeOfDay, formatDuration } from "@/lib/parse/time";
@@ -90,27 +89,9 @@ export async function summarizeCcSession(filePath: string): Promise<{ ok: boolea
   }
 }
 
-// Summarize via the Anthropic API when ANTHROPIC_API_KEY is set (works anywhere,
-// incl. Docker); otherwise spawn the local `claude` CLI (dev machine, uses your
-// Claude subscription, no API key needed).
+// Summaries use the local `claude` CLI (dev machine, your subscription). This
+// feature is dev-machine only; in Docker the whole CC panel is hidden.
 function runClaude(prompt: string): Promise<string> {
-  if (process.env.ANTHROPIC_API_KEY) return runClaudeApi(prompt);
-  return runClaudeCli(prompt);
-}
-
-async function runClaudeApi(prompt: string): Promise<string> {
-  const client = new Anthropic();
-  const res = await client.messages.create({
-    model: process.env.ANTHROPIC_MODEL || "claude-opus-4-8",
-    max_tokens: 256,
-    messages: [{ role: "user", content: prompt }],
-  });
-  const text = res.content.map((b) => (b.type === "text" ? b.text : "")).join("").trim();
-  if (!text) throw new Error("empty response from Anthropic API");
-  return text;
-}
-
-function runClaudeCli(prompt: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const child = spawn(claudeBinary(), ["-p", "--disallowedTools", "Bash Edit Write Read Glob Grep WebFetch WebSearch"], {
       stdio: ["pipe", "pipe", "pipe"],
@@ -125,11 +106,7 @@ function runClaudeCli(prompt: string): Promise<string> {
     child.stderr.on("data", (d) => (err += d.toString()));
     child.on("error", (e) => {
       clearTimeout(timer);
-      reject(
-        e.message.includes("ENOENT")
-          ? new Error("No summarizer available: set ANTHROPIC_API_KEY (e.g. in Docker) or install the claude CLI on PATH (dev machine).")
-          : e,
-      );
+      reject(e.message.includes("ENOENT") ? new Error("claude CLI not found on PATH") : e);
     });
     child.on("close", (code) => {
       clearTimeout(timer);

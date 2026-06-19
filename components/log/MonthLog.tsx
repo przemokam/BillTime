@@ -55,6 +55,7 @@ export function MonthLog({
   selectedProjectId,
   autoAdd,
   timerDraft,
+  ccEnabled,
 }: {
   data: MonthData;
   projects: ProjectOpt[];
@@ -63,6 +64,7 @@ export function MonthLog({
   selectedProjectId: string | null;
   autoAdd?: string | null;
   timerDraft?: { projectId: string; from: string; to: string } | null;
+  ccEnabled: boolean;
 }) {
   const router = useRouter();
   const [pending, startT] = useTransition();
@@ -99,13 +101,15 @@ export function MonthLog({
   );
 
   const loadCc = useCallback((dateKey: string, projectId: string) => {
-    if (!projectId) return setCcHint(null);
+    // CC integration is dev-machine only (reads local transcripts). Disabled in
+    // Docker -> never fetch, so the whole sessions panel + sum stay hidden.
+    if (!ccEnabled || !projectId) return setCcHint(null);
     setCcBusy(true);
     getCcHint(dateKey, projectId)
       .then((h) => setCcHint(h.available ? h : null))
       .catch(() => setCcHint(null))
       .finally(() => setCcBusy(false));
-  }, []);
+  }, [ccEnabled]);
 
   const lastUsedProjectId = useMemo(() => {
     for (let i = data.days.length - 1; i >= 0; i--) {

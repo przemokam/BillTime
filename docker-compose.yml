@@ -12,17 +12,8 @@ services:
       - "3939:3000"
     environment:
       - DATABASE_URL=file:/data/billtime.db
-      # Optional: Claude Code suggestion chip (hours + session topics) inside the
-      # container — also uncomment the read-only transcript mount below.
-      # - BILLTIME_CC_DIR=/cc
-      # Optional: make the AI "sum" button work in the container via the Anthropic
-      # API. Put ANTHROPIC_API_KEY in a local .env file (never commit it) — compose
-      # substitutes it here. Optionally pin a cheaper model (e.g. claude-haiku-4-5).
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-}
     volumes:
       - billtime-data:/data
-      # - ${HOME}/.claude/projects:/cc:ro
     restart: unless-stopped
 
 volumes:

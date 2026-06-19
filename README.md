@@ -52,29 +52,11 @@ docker compose up -d --build  # http://localhost:3939
 
 ---
 
-## Claude Code billing suggestions - how it works
+## Claude Code billing suggestions (dev machine only)
 
-BillTime reads your local Claude Code session transcripts (`~/.claude/projects/<slug>/<uuid>.jsonl`), matches each session to a project by its working directory (the `cwd` in the transcript vs. the repo paths you set on the project), estimates active hours from the timestamp spans (with an idle-gap cap), and lists the session topics. It only **suggests** - you confirm/edit before anything is saved. Transcript reading is purely local file access.
+When you run BillTime with `npm run dev` on the machine where you use Claude Code, the Log composer shows a **Claude Code sessions** panel: it reads your local transcripts (`~/.claude/projects/<slug>/<uuid>.jsonl`), matches sessions to a project by working directory (the `cwd` vs. the repo paths you set on the project), estimates active hours from timestamp spans (with an idle-gap cap), and lists session topics. The on-demand **sum** button rewrites a session into a one-line outcome via your local `claude` CLI. It only **suggests** - you confirm/edit before anything is saved; transcript reading is purely local file access.
 
-**In each run mode:**
-
-| | Suggestion chip (hours + topics) | On-demand AI "sum" (one-line outcome) |
-|---|---|---|
-| **npm (dev machine)** | ✅ reads `~/.claude/projects` | ✅ via your local `claude` CLI |
-| **Docker** | ✅ *if* you mount transcripts (below) | ✅ *if* you set `ANTHROPIC_API_KEY` |
-
-**Suggestion chip in Docker** - run the container **on the same machine** you use Claude Code on and uncomment these in `docker-compose.yml`:
-
-```yaml
-environment:
-  - BILLTIME_CC_DIR=/cc
-volumes:
-  - ${HOME}/.claude/projects:/cc:ro
-```
-
-A container can't reach your host filesystem otherwise, and a Docker instance on a *remote* server fundamentally can't see your laptop's transcripts - that part is local-first by design.
-
-**AI "sum" button in Docker** - the container has no local `claude` CLI, so set `ANTHROPIC_API_KEY` (put it in a local `.env`; `docker-compose.yml` substitutes it) and the summary is generated via the Anthropic API instead. Defaults to `claude-opus-4-8`; set `ANTHROPIC_MODEL=claude-haiku-4-5` for a cheaper option. On the dev machine (`npm run dev`) no key is needed - the local CLI / your subscription is used.
+This is a **local-first, dev-machine feature**. A container can't see your host's `~/.claude` (and a remote server can't see your laptop at all), so **in Docker the whole CC panel is hidden** - the self-hosted app is the timesheet, reports, projects, and timer.
 
 ---
 

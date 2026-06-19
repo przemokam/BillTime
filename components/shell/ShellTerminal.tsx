@@ -44,10 +44,12 @@ export function ShellTerminal({
           <div className="border-t border-hair pt-4">
             <MiniTimer timer={mini} place="sidebar" />
           </div>
-          <div className="text-[12px] leading-relaxed">
-            <div className={ccAvailable ? "text-neon-green" : "text-ink-dim"}>◉ {ccAvailable ? "CC Assistant active" : "CC offline"}</div>
-            <div className="text-ink-faint">{ccAvailable ? "reads local sessions to suggest entries" : "no Claude Code transcripts mounted"}</div>
-          </div>
+          {ccAvailable && (
+            <div className="text-[12px] leading-relaxed">
+              <div className="text-neon-green">◉ CC Assistant active</div>
+              <div className="text-ink-faint">reads local sessions to suggest entries</div>
+            </div>
+          )}
         </div>
       </aside>
 

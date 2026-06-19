@@ -1,4 +1,5 @@
 import { getMonthData, getProjects, getWeekdayDefaults, todayKey } from "@/lib/queries";
+import { ccAvailable } from "@/lib/claude-sessions";
 import { MonthLog } from "@/components/log/MonthLog";
 
 export default async function LogPage({
@@ -39,6 +40,7 @@ export default async function LogPage({
       selectedProjectId={projectId ?? null}
       autoAdd={sp.add ?? null}
       timerDraft={sp.compose === "1" ? { projectId: sp.cproj ?? "", from: sp.cfrom ?? "", to: sp.cto ?? "" } : null}
+      ccEnabled={ccAvailable()}
     />
   );
 }

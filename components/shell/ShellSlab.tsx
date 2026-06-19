@@ -74,10 +74,12 @@ export function ShellSlab({
         <div className="mx-auto flex max-w-[1340px] items-center gap-4 px-7 py-2 text-[12px] tracking-[.4px] text-ink-dim">
           <MiniTimer timer={mini} place="status" />
           {timer && <span className="text-ink-faint">{timer.projectName}</span>}
-          <span className="flex items-center gap-2">
-            <span className={ccAvailable ? "text-neon-green" : "text-ink-faint"}>◉</span>
-            <span className="text-ink-faint">{ccAvailable ? "CC Assistant active" : "CC offline"}</span>
-          </span>
+          {ccAvailable && (
+            <span className="flex items-center gap-2">
+              <span className="text-neon-green">◉</span>
+              <span className="text-ink-faint">CC Assistant active</span>
+            </span>
+          )}
           <span className="flex-1" />
           <span className="text-ink-faint">db <b className="font-normal text-neon-yellow">sqlite</b></span>
           <SoundToggle />
