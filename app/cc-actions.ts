@@ -125,7 +125,11 @@ function runClaudeCli(prompt: string): Promise<string> {
     child.stderr.on("data", (d) => (err += d.toString()));
     child.on("error", (e) => {
       clearTimeout(timer);
-      reject(e.message.includes("ENOENT") ? new Error("claude CLI not found on PATH") : e);
+      reject(
+        e.message.includes("ENOENT")
+          ? new Error("No summarizer available: set ANTHROPIC_API_KEY (e.g. in Docker) or install the claude CLI on PATH (dev machine).")
+          : e,
+      );
     });
     child.on("close", (code) => {
       clearTimeout(timer);
