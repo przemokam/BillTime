@@ -29,7 +29,9 @@ RUN npx prisma generate \
 # ---- runner ----
 FROM base AS runner
 ENV NODE_ENV=production
-ENV DATABASE_URL=file:/data/billtime.db
+# Default DB path inside the container. docker-compose bind-mounts the host's
+# ./prisma here, so this is the SAME prisma/dev.db that `npm run dev` uses.
+ENV DATABASE_URL=file:/app/prisma/dev.db
 ENV PORT=3000
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/.next ./.next
@@ -38,8 +40,8 @@ COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/next.config.ts ./next.config.ts
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh && mkdir -p /data
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 EXPOSE 3000
-# entrypoint runs migrations against the volume DB, then starts Next
+# entrypoint runs migrations against the DB, then starts Next
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["npm", "run", "start"]

@@ -1,8 +1,10 @@
 # BillTime self-host. `docker compose up -d` then open http://localhost:3939
 # Host port is 3939 (not 3000) to avoid clashing with other local containers.
-# Change the left side of the mapping below if 3939 is taken too.
-# Your data lives in the named volume `billtime-data` (the SQLite file), so it
-# survives container rebuilds. Back it up by copying /data/billtime.db out.
+#
+# Shared database: the container bind-mounts the repo's ./prisma directory, so it
+# uses the SAME SQLite file as `npm run dev` (prisma/dev.db) - one DB either way.
+# Run only ONE at a time (npm OR docker): two writers on one SQLite file can
+# clash. Back up by copying prisma/dev.db.
 services:
   billtime:
     build: .
@@ -11,10 +13,7 @@ services:
     ports:
       - "3939:3000"
     environment:
-      - DATABASE_URL=file:/data/billtime.db
+      - DATABASE_URL=file:/app/prisma/dev.db
     volumes:
-      - billtime-data:/data
+      - ./prisma:/app/prisma
     restart: unless-stopped
-
-volumes:
-  billtime-data:

@@ -42,10 +42,10 @@ Requirements: Docker.
 docker compose up -d --build  # http://localhost:3939
 ```
 
-- **Data** lives in the named volume `billtime-data` (SQLite at `/data/billtime.db`), so it survives rebuilds. Backup: `docker compose cp billtime:/data/billtime.db ./backup.db`.
+- **One shared database**: the container bind-mounts the repo's `./prisma`, so Docker and `npm run dev` use the **same** `prisma/dev.db`. Run only one at a time (two writers on one SQLite file can clash). Backup: copy `prisma/dev.db`.
 - **Port**: host `3939` -> container `3000` (chosen to avoid clashing with other containers). Change the mapping in `docker-compose.yml`.
 - **Migrations** run automatically on container start.
-- **Update**: `git pull && docker compose up -d --build`. **Stop**: `docker compose down` (add `-v` to also wipe the data volume).
+- **Update**: `git pull && docker compose up -d --build`. **Stop**: `docker compose down` (your data stays in `prisma/dev.db`).
 
 ---
 
