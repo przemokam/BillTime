@@ -61,9 +61,9 @@ BillTime reads your local Claude Code session transcripts (`~/.claude/projects/<
 | | Suggestion chip (hours + topics) | On-demand AI "sum" (one-line outcome) |
 |---|---|---|
 | **npm (dev machine)** | ✅ reads `~/.claude/projects` | ✅ via your local `claude` CLI |
-| **Docker** | ✅ *if* you mount transcripts (below) | ⚠️ needs the local `claude` CLI (not in the image) |
+| **Docker** | ✅ *if* you mount transcripts (below) | ✅ *if* you set `ANTHROPIC_API_KEY` |
 
-To enable the suggestion chip inside Docker, run the container **on the same machine** you use Claude Code on and uncomment these in `docker-compose.yml`:
+**Suggestion chip in Docker** - run the container **on the same machine** you use Claude Code on and uncomment these in `docker-compose.yml`:
 
 ```yaml
 environment:
@@ -72,7 +72,9 @@ volumes:
   - ${HOME}/.claude/projects:/cc:ro
 ```
 
-A container can't reach your host filesystem otherwise, and a Docker instance on a *remote* server fundamentally can't see your laptop's transcripts - that part is local-first by design. (For full AI summaries in Docker, the planned path is an `ANTHROPIC_API_KEY` fallback - not wired yet.)
+A container can't reach your host filesystem otherwise, and a Docker instance on a *remote* server fundamentally can't see your laptop's transcripts - that part is local-first by design.
+
+**AI "sum" button in Docker** - the container has no local `claude` CLI, so set `ANTHROPIC_API_KEY` (put it in a local `.env`; `docker-compose.yml` substitutes it) and the summary is generated via the Anthropic API instead. Defaults to `claude-opus-4-8`; set `ANTHROPIC_MODEL=claude-haiku-4-5` for a cheaper option. On the dev machine (`npm run dev`) no key is needed - the local CLI / your subscription is used.
 
 ---
 
