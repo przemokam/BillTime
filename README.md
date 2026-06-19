@@ -1,6 +1,6 @@
 # BillTime
 
-A fast, keyboard-first, **local-first** time tracker for hourly billing. Log a workday in seconds, clone previous days, get suggestions from your Claude Code sessions, and export a monthly per-project report to PDF for invoicing. Distinctive cyberpunk "Night City" UI with two switchable skins.
+A fast, keyboard-first, **local-first** time tracker for hourly billing. Log a workday in seconds, clone previous days, and export a monthly per-project report to PDF for invoicing. Distinctive cyberpunk "Night City" UI with two switchable skins.
 
 > Your data stays on your machine (SQLite). No accounts, no cloud, no telemetry.
 
@@ -16,14 +16,13 @@ A fast, keyboard-first, **local-first** time tracker for hourly billing. Log a w
 - **Projects & companies** CRUD, per-project hourly rate + currency (EUR / PLN / USD / GBP).
 - **Reports**: a Summary view (per-day bar chart + by-project breakdown + totals) and a Detailed table; date presets + custom range + project filter; **CSV** and **print-to-PDF** export (invoice-style header, correct Polish diacritics).
 - **Invoice issuer profile** (name, company, VAT, address, IBAN, email) stamped on the report + PDF.
-- **Claude Code suggestions**: reads your local Claude Code transcripts to suggest a day's hours and topics (suggestion only - you always confirm/edit).
 - **Two skins**: *Slab* (yellow) and *Terminal* (dark), switch in Settings.
 
 ---
 
 ## Run it - two ways
 
-### 1. Local (npm) - your dev machine, full features
+### 1. Local (npm)
 
 Requirements: Node >= 20.
 
@@ -34,8 +33,6 @@ npm run db:migrate            # create the SQLite schema
 npm run db:seed               # optional: sample data
 npm run dev                   # http://localhost:3000  (use `next dev -p 3001` to change the port)
 ```
-
-This mode has the **full** Claude Code integration: the suggestion chip (hours + topics) **and** the on-demand AI "sum" button (uses your local `claude` CLI / subscription).
 
 ### 2. Docker (self-host) - always-on
 
@@ -52,19 +49,11 @@ docker compose up -d --build  # http://localhost:3939
 
 ---
 
-## Claude Code billing suggestions (dev machine only)
-
-When you run BillTime with `npm run dev` on the machine where you use Claude Code, the Log composer shows a **Claude Code sessions** panel: it reads your local transcripts (`~/.claude/projects/<slug>/<uuid>.jsonl`), matches sessions to a project by working directory (the `cwd` vs. the repo paths you set on the project), estimates active hours from timestamp spans (with an idle-gap cap), and lists session topics. The on-demand **sum** button rewrites a session into a one-line outcome via your local `claude` CLI. It only **suggests** - you confirm/edit before anything is saved; transcript reading is purely local file access.
-
-This is a **local-first, dev-machine feature**. A container can't see your host's `~/.claude` (and a remote server can't see your laptop at all), so **in Docker the whole CC panel is hidden** - the self-hosted app is the timesheet, reports, projects, and timer.
-
----
-
 ## Tech stack
 
 Next.js 16 (App Router, Server Components + Server Actions) · TypeScript (strict) · Prisma ORM + SQLite (schema written to swap to PostgreSQL via a datasource change) · Tailwind CSS 3 · Zod at I/O boundaries · `date-fns`.
 
-**Data model:** `Company -> Project (rate, currency, color, repo paths) -> TimeEntry`; `Setting` (key/value: currency, skin, issuer profile, ...), `WeekdayDefault`, `ActiveTimer`. Money is stored as integer cents; dates as `YYYY-MM-DD`; times as minutes-from-midnight (no timezone bugs).
+**Data model:** `Company -> Project (rate, currency, color) -> TimeEntry`; `Setting` (key/value: currency, skin, issuer profile, ...), `WeekdayDefault`, `ActiveTimer`. Money is stored as integer cents; dates as `YYYY-MM-DD`; times as minutes-from-midnight (no timezone bugs).
 
 ## Scripts
 
