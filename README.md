@@ -27,11 +27,12 @@ A fast, keyboard-first, **local-first** time tracker for hourly billing. Log a w
 Requirements: Node >= 20.
 
 ```bash
+git clone https://github.com/przemokam/BillTime && cd BillTime
 npm install
 cp .env.example .env          # DATABASE_URL="file:./dev.db"
 npm run db:migrate            # create the SQLite schema
 npm run db:seed               # optional: sample data
-npm run dev                   # http://localhost:3000  (use `next dev -p 3001` to change the port)
+npm run dev                   # http://localhost:3000  (use `npm run dev -- -p 3001` to change the port)
 ```
 
 ### 2. Docker (self-host) - always-on
@@ -39,6 +40,7 @@ npm run dev                   # http://localhost:3000  (use `next dev -p 3001` t
 Requirements: Docker.
 
 ```bash
+git clone https://github.com/przemokam/BillTime && cd BillTime
 docker compose up -d --build  # http://localhost:3939
 ```
 
@@ -61,6 +63,7 @@ npm run dev          # local dev server
 npm run build        # production build
 npm run start        # serve the production build
 npm run typecheck    # tsc --noEmit
+npm test             # run unit tests (Vitest)
 npm run db:migrate   # apply Prisma migrations (dev)
 npm run db:seed      # seed sample data
 ```
