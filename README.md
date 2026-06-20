@@ -4,7 +4,8 @@ A fast, keyboard-first, **local-first** time tracker for hourly billing. Log a w
 
 > Your data stays on your machine (SQLite). No accounts, no cloud, no telemetry.
 
----
+<img width="1726" height="996" alt="image" src="https://github.com/user-attachments/assets/1df0a379-1e79-472d-afdb-00a7b65bfa95" />
+
 
 ## Features
 
@@ -18,7 +19,6 @@ A fast, keyboard-first, **local-first** time tracker for hourly billing. Log a w
 - **Invoice issuer profile** (name, company, VAT, address, IBAN, email) stamped on the report + PDF.
 - **Two skins**: *Slab* (yellow) and *Terminal* (dark), switch in Settings.
 
----
 
 ## Run it - two ways
 
@@ -47,7 +47,6 @@ docker compose up -d --build  # http://localhost:3939
 - **Migrations** run automatically on container start.
 - **Update**: `git pull && docker compose up -d --build`. **Stop**: `docker compose down` (your data stays in `prisma/dev.db`).
 
----
 
 ## Tech stack
 
@@ -66,7 +65,6 @@ npm run db:migrate   # apply Prisma migrations (dev)
 npm run db:seed      # seed sample data
 ```
 
----
 
 ## License
 
