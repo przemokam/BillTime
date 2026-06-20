@@ -63,7 +63,7 @@ export function MonthLog({
   today: string;
   selectedProjectId: string | null;
   autoAdd?: string | null;
-  timerDraft?: { projectId: string; from: string; to: string } | null;
+  timerDraft?: { projectId: string; date: string; from: string; to: string } | null;
   ccEnabled: boolean;
 }) {
   const router = useRouter();
@@ -229,7 +229,7 @@ export function MonthLog({
 
   useEffect(() => {
     if (timerDraft && timerDraft.projectId) {
-      const date = today;
+      const date = timerDraft.date && /^\d{4}-\d{2}-\d{2}$/.test(timerDraft.date) ? timerDraft.date : today;
       const projectId = timerDraft.projectId || selectedProjectId || lastUsedProjectId || projects[0]?.id || "";
       setError(null);
       setDraft({ editId: null, date, projectId, description: defaultDescFor(date, projectId), from: timerDraft.from, to: timerDraft.to });

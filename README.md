@@ -44,8 +44,10 @@ git clone https://github.com/przemokam/BillTime && cd BillTime
 docker compose up -d --build  # http://localhost:3939
 ```
 
+- **Security**: BillTime has **no authentication** (single-user, local-first). The container binds to `127.0.0.1` only, so it is reachable just from the host machine. **Do not expose it on a public IP** without putting it behind a reverse proxy with auth (e.g. Nginx + Basic Auth) or a VPN/Tailscale - otherwise anyone who can reach the port sees and edits all your data.
 - **One shared database**: the container bind-mounts the repo's `./prisma`, so Docker and `npm run dev` use the **same** `prisma/dev.db`. Run only one at a time (two writers on one SQLite file can clash). Backup: copy `prisma/dev.db`.
-- **Port**: host `3939` -> container `3000` (chosen to avoid clashing with other containers). Change the mapping in `docker-compose.yml`.
+- **Port**: `127.0.0.1:3939` -> container `3000` (localhost-only; chosen to avoid clashing with other containers). Change the mapping in `docker-compose.yml`.
+- **Timezone**: defaults to UTC. Set `TZ` (e.g. `TZ=Europe/Warsaw docker compose up -d`) so "today" and report ranges match your local day.
 - **Migrations** run automatically on container start.
 - **Update**: `git pull && docker compose up -d --build`. **Stop**: `docker compose down` (your data stays in `prisma/dev.db`).
 

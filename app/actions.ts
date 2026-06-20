@@ -5,12 +5,26 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { parseTimeOfDay, formatTimeOfDay } from "@/lib/parse/time";
 import { todayKey, getLatestDayWithEntries } from "@/lib/queries";
-import { SUPPORTED_CURRENCIES } from "@/lib/format";
+import { SUPPORTED_CURRENCIES, toDateKey } from "@/lib/format";
 
 export type ActionResult = { ok: boolean; error?: string; id?: string };
-export type TimerStopResult = ActionResult & { draft?: { projectId: string; from: string; to: string } };
+export type TimerStopResult = ActionResult & { draft?: { projectId: string; date: string; from: string; to: string } };
 
 const dateRe = /^\d{4}-\d{2}-\d{2}$/;
+
+/** True only for a real calendar date "YYYY-MM-DD" (rejects 2026-99-99). */
+function isRealDate(s: string): boolean {
+  if (!dateRe.test(s)) return false;
+  const [y, m, d] = s.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
+}
+
+/** Log the real error server-side; return a generic message to the client (no schema leak). */
+function fail(e: unknown, msg: string): ActionResult {
+  console.error(`[billtime] ${msg}:`, e);
+  return { ok: false, error: msg };
+}
 
 function parseRateToCents(raw: string): number {
   const n = parseFloat(raw.replace(",", ".").trim());
@@ -20,14 +34,16 @@ function parseRateToCents(raw: string): number {
 
 // ---------- Time entries ----------
 
+const ENTRY_SOURCES = ["manual", "cloned", "timer", "cc-suggested"] as const;
+
 const EntryInput = z.object({
   id: z.string().optional(),
-  date: z.string().regex(dateRe, "Invalid date"),
+  date: z.string().refine(isRealDate, "Invalid date"),
   projectId: z.string().min(1, "Select a project"),
   description: z.string().trim().min(1, "Description can't be empty").max(2000),
   from: z.string().min(1, "Enter a start time"),
   to: z.string().min(1, "Enter an end time"),
-  source: z.string().optional(),
+  source: z.enum(ENTRY_SOURCES).optional(),
 });
 
 export async function saveEntry(input: z.input<typeof EntryInput>): Promise<ActionResult> {
@@ -39,9 +55,15 @@ export async function saveEntry(input: z.input<typeof EntryInput>): Promise<Acti
   const endMin = parseTimeOfDay(to);
   if (startMin == null) return { ok: false, error: `Can't read start time: ${from}` };
   if (endMin == null) return { ok: false, error: `Can't read end time: ${to}` };
+  if (endMin === startMin) return { ok: false, error: "Start and end time can't be equal" };
 
-  const normalizedEnd = endMin <= startMin ? endMin + 1440 : endMin;
+  // end before start => crosses midnight (+24h). Equal is rejected above so we
+  // never silently record a full 24h day for a 09:00-09:00 entry.
+  const normalizedEnd = endMin < startMin ? endMin + 1440 : endMin;
   const data = { date, projectId, description, startMin, endMin: normalizedEnd, source: source ?? "manual" };
+
+  const project = await db.project.findUnique({ where: { id: projectId }, select: { id: true } });
+  if (!project) return { ok: false, error: "Selected project no longer exists" };
 
   try {
     if (id) {
@@ -52,7 +74,7 @@ export async function saveEntry(input: z.input<typeof EntryInput>): Promise<Acti
       return { ok: true, id: created.id };
     }
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Save failed" };
+    return fail(e, "Save failed");
   }
   revalidatePath("/log");
   return { ok: true, id };
@@ -64,7 +86,7 @@ export async function deleteEntry(id: string): Promise<ActionResult> {
     revalidatePath("/log");
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Delete failed" };
+    return fail(e, "Delete failed");
   }
 }
 
@@ -87,7 +109,7 @@ export async function cloneEntry(id: string, targetDate?: string): Promise<Actio
     revalidatePath("/log");
     return { ok: true, id: created.id };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Duplicate failed" };
+    return fail(e, "Duplicate failed");
   }
 }
 
@@ -110,7 +132,7 @@ export async function cloneLastDay(targetDate?: string): Promise<ActionResult> {
     revalidatePath("/log");
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Clone failed" };
+    return fail(e, "Clone failed");
   }
 }
 
@@ -127,7 +149,7 @@ export async function setWeekdayDefault(weekday: number, description: string, en
     revalidatePath("/log");
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Failed to save rule" };
+    return fail(e, "Failed to save rule");
   }
 }
 
@@ -143,7 +165,7 @@ export async function setSetting(key: string, value: string): Promise<ActionResu
     revalidatePath("/settings");
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Failed to save setting" };
+    return fail(e, "Failed to save setting");
   }
 }
 
@@ -179,7 +201,7 @@ export async function setIssuerProfile(input: z.input<typeof IssuerInput>): Prom
     revalidatePath("/reports");
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Failed to save issuer" };
+    return fail(e, "Failed to save issuer");
   }
 }
 
@@ -189,7 +211,13 @@ const ProjectInput = z.object({
   id: z.string().optional(),
   name: z.string().trim().min(1, "Project name is required").max(200),
   companyId: z.string().nullable().optional(),
-  rate: z.string().default("0"),
+  rate: z
+    .string()
+    .default("0")
+    .refine((s) => {
+      const v = s.replace(",", ".").trim();
+      return v === "" || (/^\d*\.?\d+$/.test(v) && Number(v) >= 0 && Number(v) <= 100000);
+    }, "Enter a valid hourly rate"),
   currency: z.enum(SUPPORTED_CURRENCIES).default("EUR"),
   color: z.string().nullable().optional(),
   repoPaths: z.string().default(""),
@@ -217,47 +245,61 @@ export async function saveProject(input: z.input<typeof ProjectInput>): Promise<
     revalidatePath("/log");
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Failed to save project" };
+    return fail(e, "Failed to save project");
   }
 }
 
 export async function deleteProject(id: string): Promise<ActionResult> {
+  // Proactive guard (clean message); the DB-level Restrict FK is the safety net.
+  const count = await db.timeEntry.count({ where: { projectId: id } });
+  if (count > 0) return { ok: false, error: "Can't delete a project with entries. Archive it instead." };
   try {
     await db.project.delete({ where: { id } });
     revalidatePath("/projects");
     revalidatePath("/log");
     return { ok: true };
-  } catch {
-    return { ok: false, error: "Can't delete a project with entries. Archive it instead." };
+  } catch (e) {
+    return fail(e, "Failed to delete project");
   }
 }
 
-export async function saveCompany(input: { id?: string; name: string; note?: string }): Promise<ActionResult> {
-  const name = input.name?.trim();
-  if (!name) return { ok: false, error: "Company name is required" };
+const CompanyInput = z.object({
+  id: z.string().optional(),
+  name: z.string().trim().min(1, "Company name is required").max(200),
+  note: z.string().trim().max(2000).optional(),
+});
+
+export async function saveCompany(input: z.input<typeof CompanyInput>): Promise<ActionResult> {
+  const parsed = CompanyInput.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid company data" };
+  const { id, name, note } = parsed.data;
   try {
-    if (input.id) await db.company.update({ where: { id: input.id }, data: { name, note: input.note ?? null } });
-    else await db.company.create({ data: { name, note: input.note ?? null } });
+    if (id) await db.company.update({ where: { id }, data: { name, note: note ?? null } });
+    else await db.company.create({ data: { name, note: note ?? null } });
     revalidatePath("/projects");
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Failed to save company" };
+    return fail(e, "Failed to save company");
   }
 }
 
 // ---------- Timer ----------
 
 export async function timerStart(projectId: string, description = ""): Promise<ActionResult> {
+  if (!projectId) return { ok: false, error: "Select a project" };
+  const desc = String(description).slice(0, 2000);
+  const project = await db.project.findUnique({ where: { id: projectId }, select: { id: true } });
+  if (!project) return { ok: false, error: "Selected project no longer exists" };
   try {
     await db.activeTimer.upsert({
       where: { id: "singleton" },
-      update: { projectId, description, startedAt: new Date(), pausedMs: 0, isPaused: false, pausedAt: null },
-      create: { id: "singleton", projectId, description },
+      update: { projectId, description: desc, startedAt: new Date(), pausedMs: 0, isPaused: false, pausedAt: null },
+      create: { id: "singleton", projectId, description: desc },
     });
     revalidatePath("/log");
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Timer start failed" };
+    return fail(e, "Timer start failed");
   }
 }
 
@@ -295,15 +337,16 @@ export async function timerStop(): Promise<TimerStopResult> {
   const startMin = t.startedAt.getHours() * 60 + t.startedAt.getMinutes();
   const endMin = startMin + Math.max(1, Math.round(elapsedMs / 60000));
   const projectId = t.projectId ?? "";
+  const date = toDateKey(t.startedAt); // the day the timer STARTED (not "today")
 
   try {
     await db.activeTimer.delete({ where: { id: "singleton" } });
     revalidatePath("/log");
     return {
       ok: true,
-      draft: projectId ? { projectId, from: formatTimeOfDay(startMin), to: formatTimeOfDay(endMin) } : undefined,
+      draft: projectId ? { projectId, date, from: formatTimeOfDay(startMin), to: formatTimeOfDay(endMin) } : undefined,
     };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Timer stop failed" };
+    return fail(e, "Timer stop failed");
   }
 }

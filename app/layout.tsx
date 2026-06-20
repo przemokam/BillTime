@@ -20,7 +20,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     /* default slab */
   }
   return (
-    <html lang="pl" data-skin={skin} className={`${tektur.variable} ${chakra.variable} ${mono.variable}`}>
+    <html lang="en" data-skin={skin} className={`${tektur.variable} ${chakra.variable} ${mono.variable}`}>
       <body>{children}</body>
     </html>
   );

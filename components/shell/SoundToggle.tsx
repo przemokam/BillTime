@@ -19,7 +19,7 @@ export function SoundToggle() {
         sfx.setOn(v);
         setOn(v);
       }}
-      title="Dzwiek on/off"
+      title="Sound on/off"
       className={cn("cursor-pointer transition-colors hover:text-neon-green", on ? "text-ink-dim" : "text-ink-faint")}
     >
       {on ? "🔊" : "🔇"} snd

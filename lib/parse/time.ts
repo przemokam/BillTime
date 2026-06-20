@@ -35,6 +35,8 @@ export function parseTimeOfDay(raw: string): number | null {
   let min: number;
 
   if (s.includes(":") || s.includes(".")) {
+    // strict H[:.]MM - reject trailing garbage like "9:30:x" or "9:3a"
+    if (!/^\d{1,2}[:.]\d{0,2}$/.test(s)) return null;
     const [a, b = "0"] = s.split(/[:.]/);
     h = parseInt(a || "0", 10);
     min = parseInt(b.padEnd(2, "0").slice(0, 2), 10);

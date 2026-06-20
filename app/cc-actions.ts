@@ -41,7 +41,8 @@ export async function getCcHint(dateKey: string, projectId: string): Promise<CcH
   }
 
   const idleSetting = await db.setting.findUnique({ where: { key: "ccIdleGapMin" } });
-  const idleGap = idleSetting ? parseInt(idleSetting.value, 10) || 10 : 10;
+  const rawGap = idleSetting ? parseInt(idleSetting.value, 10) : NaN;
+  const idleGap = Number.isFinite(rawGap) ? Math.min(480, Math.max(1, rawGap)) : 10;
 
   const s = getCcSuggestion(dateKey, repoPaths, idleGap);
   if (!s.available) return empty;

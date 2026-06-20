@@ -68,7 +68,7 @@ export function TimerHud({
     startT(async () => {
       const res = await timerStop();
       if (res.ok && res.draft) {
-        router.push(`/log?compose=1&cproj=${res.draft.projectId}&cfrom=${encodeURIComponent(res.draft.from)}&cto=${encodeURIComponent(res.draft.to)}`);
+        router.push(`/log?compose=1&cproj=${res.draft.projectId}&cdate=${res.draft.date}&cfrom=${encodeURIComponent(res.draft.from)}&cto=${encodeURIComponent(res.draft.to)}`);
       } else {
         router.refresh();
       }

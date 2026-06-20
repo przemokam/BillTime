@@ -42,7 +42,7 @@ model Project {
 model TimeEntry {
   id          String   @id @default(cuid())
   date        String   // "YYYY-MM-DD"
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Restrict)
   projectId   String
   description String
   startMin    Int      // minutes from midnight (0-1439)

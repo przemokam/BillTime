@@ -16,6 +16,7 @@ export type ReportRow = {
   endMin: number;
   durationMin: number;
   currency: string;
+  rateCents: number;
   amountCents: number;
 };
 
@@ -67,6 +68,7 @@ export async function getReportData(start: string, end: string, projectIds?: str
       endMin: e.endMin,
       durationMin,
       currency: e.project.currency,
+      rateCents: e.project.rateCents,
       amountCents: amountCents(durationMin, e.project.rateCents),
     };
   });
@@ -91,32 +93,39 @@ export async function getReportData(start: string, end: string, projectIds?: str
     return { date, durationMin: segments.reduce((s, x) => s + x.durationMin, 0), segments };
   });
 
-  // breakdown by project
-  const projMap = new Map<string, ReportProject>();
+  // breakdown by project. Aggregate minutes first, then round the amount ONCE on
+  // the summed duration - so many short entries can't drift from billing the
+  // total time (e.g. 3x20min must equal billing 1h, not 3x rounded 20min).
+  const projAcc = new Map<string, { row: ReportProject; rateCents: number }>();
   for (const r of rows) {
-    const p = projMap.get(r.projectId);
-    if (p) {
-      p.durationMin += r.durationMin;
-      p.amountCents += r.amountCents;
-      p.entries += 1;
+    const a = projAcc.get(r.projectId);
+    if (a) {
+      a.row.durationMin += r.durationMin;
+      a.row.entries += 1;
     } else {
-      projMap.set(r.projectId, {
-        projectId: r.projectId,
-        name: r.projectName,
-        color: r.projectColor,
-        companyName: r.companyName,
-        entries: 1,
-        durationMin: r.durationMin,
-        amountCents: r.amountCents,
-        currency: r.currency,
+      projAcc.set(r.projectId, {
+        rateCents: r.rateCents,
+        row: {
+          projectId: r.projectId,
+          name: r.projectName,
+          color: r.projectColor,
+          companyName: r.companyName,
+          entries: 1,
+          durationMin: r.durationMin,
+          amountCents: 0,
+          currency: r.currency,
+        },
       });
     }
   }
-  const byProject = [...projMap.values()].sort((a, b) => b.durationMin - a.durationMin);
+  for (const a of projAcc.values()) a.row.amountCents = amountCents(a.row.durationMin, a.rateCents);
+  const byProject = [...projAcc.values()].map((a) => a.row).sort((a, b) => b.durationMin - a.durationMin);
 
   const totalMin = rows.reduce((s, r) => s + r.durationMin, 0);
+  // Sum the per-project amounts (each already rounded once) so the invoice total
+  // matches the per-project breakdown exactly.
   const amountByCurrency: Record<string, number> = {};
-  for (const r of rows) amountByCurrency[r.currency] = (amountByCurrency[r.currency] ?? 0) + r.amountCents;
+  for (const p of byProject) amountByCurrency[p.currency] = (amountByCurrency[p.currency] ?? 0) + p.amountCents;
 
   return { start, end, rows, byDay, byProject, totalMin, amountByCurrency, entryCount: rows.length };
 }

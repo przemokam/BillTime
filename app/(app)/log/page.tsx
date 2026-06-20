@@ -39,7 +39,7 @@ export default async function LogPage({
       today={todayKey()}
       selectedProjectId={projectId ?? null}
       autoAdd={sp.add ?? null}
-      timerDraft={sp.compose === "1" ? { projectId: sp.cproj ?? "", from: sp.cfrom ?? "", to: sp.cto ?? "" } : null}
+      timerDraft={sp.compose === "1" ? { projectId: sp.cproj ?? "", date: sp.cdate ?? "", from: sp.cfrom ?? "", to: sp.cto ?? "" } : null}
       ccEnabled={ccAvailable()}
     />
   );

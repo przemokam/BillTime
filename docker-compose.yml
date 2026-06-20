@@ -11,9 +11,15 @@ services:
     image: billtime:latest
     container_name: billtime
     ports:
-      - "3939:3000"
+      # Localhost only by default. The app has NO authentication (single-user,
+      # local-first), so do NOT expose this publicly without a reverse proxy +
+      # auth or a VPN. To bind all interfaces deliberately, change to "3939:3000".
+      - "127.0.0.1:3939:3000"
     environment:
       - DATABASE_URL=file:/app/prisma/dev.db
+      # Set to your local timezone so "today" and report ranges match your day,
+      # e.g. `TZ=Europe/Warsaw docker compose up -d`. Defaults to UTC.
+      - TZ=${TZ:-UTC}
     volumes:
       - ./prisma:/app/prisma
     restart: unless-stopped

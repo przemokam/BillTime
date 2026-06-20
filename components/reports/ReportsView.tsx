@@ -33,27 +33,28 @@ const dayLabel = (k: string) => {
 };
 
 // bold, print-legible style for the exported PDF (separate from the on-screen skin)
+// Local-first: no web-font @import (keeps data on the machine, no network call on
+// export). Falls back to the system monospace / sans the browser already has.
 const PDF_STYLE = `
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Tektur:wght@700;900&display=swap');
 *,*::before,*::after{box-sizing:border-box}
-body{font-family:'JetBrains Mono',ui-monospace,monospace;color:#111;margin:0;font-size:13px;line-height:1.55;font-variant-numeric:tabular-nums}
+body{font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;color:#111;margin:0;font-size:13px;line-height:1.55;font-variant-numeric:tabular-nums}
 @page{margin:18mm 16mm;size:A4}
 .issuer{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;padding-bottom:14px;border-bottom:3px solid #111;margin-bottom:6px}
-.issuer-name{font-family:'Tektur',sans-serif;font-size:21px;font-weight:900;line-height:1.05;margin-bottom:6px}
+.issuer-name{font-family:'Tektur',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:21px;font-weight:900;line-height:1.05;margin-bottom:6px}
 .issuer-meta{font-size:12px;color:#444;line-height:1.5}
 .issuer-right{text-align:right}
-.report-title{font-family:'Tektur',sans-serif;font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:1px}
+.report-title{font-family:'Tektur',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;font-weight:900;text-transform:uppercase;letter-spacing:1px}
 .report-range{font-size:13px;color:#222;margin-top:4px}
 .report-sub{font-size:11px;color:#666;margin-top:2px}
-h2{font-family:'Tektur',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;border-top:3px solid #111;padding-top:8px;margin:22px 0 0}
+h2{font-family:'Tektur',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;border-top:3px solid #111;padding-top:8px;margin:22px 0 0}
 table{width:100%;border-collapse:collapse;margin-top:8px}
-th{text-align:left;border-bottom:2px solid #111;padding:7px 7px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#333;font-family:'Tektur',sans-serif;font-weight:700}
+th{text-align:left;border-bottom:2px solid #111;padding:7px 7px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#333;font-family:'Tektur',system-ui,-apple-system,'Segoe UI',sans-serif;font-weight:700}
 td{border-bottom:1px solid #ccc;padding:7px 7px;font-size:12.5px;vertical-align:top}
 th.right,td.right{text-align:right}
 td.nowrap{white-space:nowrap}
 td.desc{max-width:200px;word-wrap:break-word;overflow-wrap:anywhere}
 tr{page-break-inside:avoid}
-tr.total td{border-top:2px solid #111;border-bottom:2px solid #111;font-family:'Tektur',sans-serif;font-weight:900;font-size:13px;padding-top:9px;padding-bottom:9px}
+tr.total td{border-top:2px solid #111;border-bottom:2px solid #111;font-family:'Tektur',system-ui,-apple-system,'Segoe UI',sans-serif;font-weight:900;font-size:13px;padding-top:9px;padding-bottom:9px}
 tr.total td.amount{font-size:15px}
 .proj-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
 @media print{a{color:inherit;text-decoration:none}}
